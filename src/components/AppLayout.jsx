@@ -4,13 +4,19 @@ import { Outlet } from 'react-router-dom';
 import Layout from './Layout';
 import { useAuth } from '../contexts/AuthContext';
 import { useForceNavigate } from '../hooks/useForceNavigate';
+import AuthLoadingModal from './AuthLoadingModal';
 
 const AppLayout = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, isVerifying } = useAuth();
   const forceNavigate = useForceNavigate();
   
   if (loading) {
-    return <div className="loading">加载中...</div>;
+    return (
+      <>
+        <div className="loading">加载中...</div>
+        <AuthLoadingModal isVisible={true} message="正在初始化..." />
+      </>
+    );
   }
   
   if (!isAuthenticated) {
@@ -20,9 +26,12 @@ const AppLayout = ({ children }) => {
   }
   
   return (
-    <Layout>
-      {children || <Outlet />}
-    </Layout>
+    <>
+      <Layout>
+        {children || <Outlet />}
+      </Layout>
+      <AuthLoadingModal isVisible={isVerifying} />
+    </>
   );
 };
 

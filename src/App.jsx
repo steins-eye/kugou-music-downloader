@@ -1,5 +1,30 @@
-// src/App.jsx - 已升级为现代 React Router v7 模式
-// 路由配置现在位于 src/router.jsx 文件中
-// 应用入口现在使用 RouterProvider 在 main.jsx 中配置
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { DownloadProvider } from './contexts/DownloadContext';
+import { PlayerProvider } from './contexts/PlayerContext';
+import { SearchProvider } from './contexts/SearchContext';
+import AppRouter from './router';
+import TestLogin from './components/TestLogin';
 
-export { router } from './router';
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <DownloadProvider>
+          <PlayerProvider>
+            <SearchProvider>
+              <div style={{ minHeight: '100vh' }}>
+                <AppRouter />
+                {/* 测试登录组件 - 可以删除 */}
+                <TestLogin />
+              </div>
+            </SearchProvider>
+          </PlayerProvider>
+        </DownloadProvider>
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App;
