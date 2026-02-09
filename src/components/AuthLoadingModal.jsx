@@ -2,7 +2,7 @@
 import React from 'react';
 import '../styles/layout.css';
 
-const AuthLoadingModal = ({ isVisible, message = "正在验证用户凭证..." }) => {
+const AuthLoadingModal = ({ isVisible, message }) => {
   if (!isVisible) {
     return null;
   }

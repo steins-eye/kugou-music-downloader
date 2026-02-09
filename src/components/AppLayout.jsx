@@ -14,7 +14,7 @@ const AppLayout = ({ children }) => {
     return (
       <>
         <div className="loading">加载中...</div>
-        <AuthLoadingModal isVisible={true} message="正在初始化..." />
+        <AuthLoadingModal isVisible={true} message="正在验证用户凭证..." />
       </>
     );
   }
