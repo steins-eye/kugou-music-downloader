@@ -68,7 +68,7 @@ const SongItem = memo(({ song, albumImage, onPlay, onDownload, isLast, lastRef, 
 
   return (
     <div
-      className="song-item glass-card"
+      className="song-item"
       ref={isLast ? lastRef : null}
     >
       {/* 专辑封面 */}
@@ -156,14 +156,14 @@ const SongItem = memo(({ song, albumImage, onPlay, onDownload, isLast, lastRef, 
       </div>
       <div className="song-actions">
         <button
-          className="action-button glass-button play-btn"
+          className="action-button play-btn"
           onClick={handlePlay}
         >
           <PlayCircleOutlined />
           播放
         </button>
         <button
-          className="action-button glass-button download-btn"
+          className="action-button download-btn"
           onClick={handleDownload}
           disabled={isDownloading}
         >
@@ -207,7 +207,7 @@ SongItem.displayName = 'SongItem';
 const SongList = memo(({ songs, albumImages, onPlay, onDownload, lastRef, downloadProgress }) => {
   if (songs.length === 0) {
     return (
-      <div className="no-results glass-card">
+      <div className="no-results">
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description="未找到相关歌曲"

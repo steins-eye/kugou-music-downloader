@@ -96,7 +96,6 @@ const SearchWithSuggestions = ({
   const executeSearch = (searchValue) => {
     const finalSearchValue = searchValue.trim();
     if (finalSearchValue) {
-      setSuggestions([]);
       setIsSelecting(false); // 重置选择状态
       setLocalValue(finalSearchValue); // 更新输入框显示
       if (onSearch) {

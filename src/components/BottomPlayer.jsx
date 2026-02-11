@@ -115,7 +115,7 @@ const BottomPlayer = memo(() => {
 
             
             <button 
-              className="control-btn play-btn glass-button"
+              className="control-btn"
               onClick={togglePlay}
               disabled={isLoading}
               title={isPlaying ? '暂停' : '播放'}
