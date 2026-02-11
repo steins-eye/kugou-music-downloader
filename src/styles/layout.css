@@ -93,7 +93,101 @@
   cursor: not-allowed;
 }
 
+.header-search-container {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex: 1;
+  max-width: 600px;
+}
+
+/* 搜索建议组件样式 */
+.search-with-suggestions {
+  flex: 1;
+  width: 100%;
+}
+
+.search-autocomplete {
+  width: 100%;
+}
+
+.search-input {
+  background-color: #333333 !important;
+  border: 1px solid #404040 !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+}
+
+.search-input:focus, 
+.search-input:hover {
+  border-color: #1890ff !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* 搜索建议下拉菜单样式 */
+.search-suggestions-dropdown {
+  background-color: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+}
+
+.suggestions-dropdown {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+.suggestion-text {
+  flex: 1;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.suggestion-category {
+  color: #888888;
+  font-size: 0.8rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.antd-input-affix-wrapper {
+  background-color: #333333 !important;
+  border: 1px solid #404040 !important;
+  border-radius: 4px !important;
+  color: #ffffff !important;
+}
+
+.antd-input {
+  background-color: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.antd-input::placeholder {
+  color: #888888 !important;
+}
+
+.antd-input:focus {
+  box-shadow: none !important;
+}
+
 .header-search-button {
+  display: none;
   padding: 0.5rem 1rem;
   white-space: nowrap;
   min-width: 80px;
@@ -919,6 +1013,81 @@
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
+/* 搜索建议下拉样式 */
+.search-suggestions-dropdown {
+  background-color: #2d2d2d !important;
+  border: 1px solid #404040 !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+.suggestions-dropdown {
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+  background-color: #3a3a3a;
+}
+
+.suggestion-text {
+  flex: 1;
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.suggestion-category {
+  background-color: #1890ff;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.ant-select-dropdown {
+  background-color: #2d2d2d !important;
+}
+
+.ant-select-item {
+  color: #ffffff !important;
+  background-color: #2d2d2d !important;
+}
+
+.ant-select-item:hover {
+  background-color: #3a3a3a !important;
+}
+
+.ant-select-item-option-selected {
+  background-color: #1890ff !important;
+}
+
+.ant-select-item-option-selected:hover {
+  background-color: #1890ff !important;
+}
+
+.ant-select-item-group {
+  color: #cccccc !important;
+  background-color: #252525 !important;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-bottom: 1px solid #404040;
+}
+
 .lazy-loading-indicator {
   display: flex;
   justify-content: center;
@@ -1020,6 +1189,12 @@
     padding: 1rem 1rem 1rem 2.5rem;
   }
   
+  .header-search-container {
+    flex-direction: column;
+    gap: 0.8rem;
+    max-width: 100%;
+  }
+
   .header-search-button {
     width: 100%;
     padding: 1rem;

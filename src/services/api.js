@@ -171,6 +171,14 @@ export const downloadSong = async (hash, filename, onProgress) => {
   }
 };
 
+// 搜索建议接口
+export const getSuggestions = (keywords) => {
+  if (!keywords?.trim()) {
+    return Promise.resolve({ data: [] });
+  }
+  return request(`/search/suggest?keywords=${encodeURIComponent(keywords.trim())}&mvTipCount=0`);
+};
+
 // 获取专辑封面图片
 export const getAlbumImages = (hash, albumId = '') => {
   const params = new URLSearchParams();

@@ -1,26 +1,24 @@
 // src/components/Layout.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearch } from '../contexts/SearchContext';
-import { SearchOutlined } from '@ant-design/icons';
+import SearchWithSuggestions from './SearchWithSuggestions';
 import BottomPlayer from './BottomPlayer';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const { isSearching, handleSearch: contextHandleSearch } = useSearch();
-  const [localKeyword, setLocalKeyword] = useState('');
+  const { handleSearch: contextHandleSearch } = useSearch();
 
   const handleLogout = () => {
     window.location.href = '/';
     logout();
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (localKeyword.trim()) {
-      contextHandleSearch(localKeyword.trim());
+  const handleSearchSubmit = (keyword) => {
+    if (keyword?.trim()) {
+      contextHandleSearch(keyword.trim());
     }
   };
 
@@ -44,28 +42,13 @@ const Layout = ({ children }) => {
               <Link to="/">🎵 音乐下载器</Link>
             </div>
             {location.pathname === '/' && (
-              <form onSubmit={handleSearch} className="header-search-form">
-                <div className="search-wrapper">
-                  <span className="search-icon">
-                    <SearchOutlined />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="搜索歌曲、歌手、专辑..."
-                    value={localKeyword}
-                    onChange={(e) => setLocalKeyword(e.target.value)}
-                    className="header-search-input glass-input"
-                    disabled={isSearching}
-                  />
-                  <button 
-                    type="submit" 
-                    className="header-search-button glass-button primary"
-                    disabled={isSearching}
-                  >
-                    {isSearching ? '搜索中...' : '搜索'}
-                  </button>
-                </div>
-              </form>
+              <div className="header-search-container">
+                <SearchWithSuggestions 
+                  onSearch={handleSearchSubmit}
+                  disabled={false}
+                  placeholder="搜索歌曲、歌手、专辑..."
+                />
+              </div>
             )}
           </div>
           <nav className="nav">

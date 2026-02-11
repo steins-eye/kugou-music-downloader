@@ -1,5 +1,5 @@
 // src/pages/Home.jsx
-import React, { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
+import React, { useState, useRef, useCallback, useEffect, memo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Spin, Empty, message, Progress } from "antd";
 import {
@@ -17,7 +17,7 @@ import {
 } from "../services/api";
 import { generateMusicFilename } from "../utils/filename";
 import { usePlayerActions } from "../contexts/PlayerContext";
-import { useSearch } from "../contexts/SearchContext";
+import { useSearch } from '../contexts/SearchContext';
 import { useDownloadActions, useDownloadState } from "../contexts/DownloadContext";
 
 // 单个歌曲项组件，使用memo优化
@@ -268,9 +268,8 @@ const Home = () => {
   const observerRef = useRef();
 
   const { playSong } = usePlayerActions();
-  const navigate = useNavigate();
-  const location = useLocation();
   const { searchKeyword, finishSearch } = useSearch();
+  
   const { downloadProgress } = useDownloadState();
   const { updateProgress, removeProgress } = useDownloadActions();
 
@@ -355,24 +354,24 @@ const Home = () => {
   };
 
   const searchSongs = useCallback(
-    async (page = 1) => {
+    async (page = 1, keyword = searchKeyword) => {
       // 如果没有关键词且不是分页操作，提示用户输入
-      if (!searchKeyword?.trim() && page === 1) {
+      if (!keyword?.trim() && page === 1) {
         // 不再弹出alert，让用户自己输入
         return;
       }
 
-      // 如果没有关键词但有分页操作，使用之前的关键词
-      const keyword = searchKeyword?.trim() || "";
+      // 如果没有关键词但有分页操作，使用传入的关键词
+      const searchKeywordValue = keyword?.trim() || "";
 
-      if (!keyword) {
+      if (!searchKeywordValue) {
         return;
       }
 
       try {
         setIsLoading(true);
         const res = await request(
-          `/search?type=song&keywords=${keyword}&page=${page}&pagesize=${pageSize}`
+          `/search?type=song&keywords=${searchKeywordValue}&page=${page}&pagesize=${pageSize}`
         );
         const data = res.data;
         if (page === 1) {
@@ -388,13 +387,6 @@ const Home = () => {
         setTotal(data.total || 0);
         setCurrentPage(page);
         setHasMore(page * pageSize < (data.total || 0));
-
-        // 更新URL参数
-        if (page === 1) {
-          const searchParams = new URLSearchParams(location.search);
-          searchParams.set("q", keyword);
-          navigate(`/?${searchParams.toString()}`, { replace: true });
-        }
       } catch (error) {
         console.error("搜索失败:", error);
         message.error("搜索失败，请稍后重试");
@@ -404,34 +396,21 @@ const Home = () => {
         finishSearch(); // 完成搜索后关闭加载状态
       }
     },
-    [searchKeyword, pageSize, location.search, navigate, finishSearch]
+    [finishSearch, pageSize, searchKeyword]
   );
 
-  // 页面加载时检查URL参数
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const query = searchParams.get("q");
-    if (query) {
-      searchSongs(1);
-    }
-  }, [location.search, searchSongs]);
+  useEffect(()=>{
+    searchSongs()
+  },[searchSongs])
 
-  // 当搜索关键词改变时自动搜索 - 使用防抖优化
-  useEffect(() => {
-    if (!searchKeyword?.trim()) return;
-    
-    const timeoutId = setTimeout(() => {
-      searchSongs(1);
-    }, 300); // 300ms 防抖延迟
-    
-    return () => clearTimeout(timeoutId);
-  }, [searchKeyword]); // 只依赖 searchKeyword，避免 searchSongs 变化导致重复执行
+  // 注意：搜索现在只通过回车键或选择建议项触发
+  // 移除了对 searchKeyword 变化的监听，避免输入时自动执行搜索
 
   const loadMoreSongs = useCallback(() => {
     if (!hasMore || isLoading || isLazyLoading) return;
     setIsLazyLoading(true);
-    searchSongs(currentPage + 1);
-  }, [hasMore, isLoading, isLazyLoading, searchSongs, currentPage]);
+    searchSongs(currentPage + 1, searchKeyword); // 显式传递当前搜索关键词
+  }, [hasMore, isLoading, isLazyLoading, searchSongs, currentPage, searchKeyword]);
 
   const lastSongElementRef = useCallback(
     (node) => {
@@ -464,9 +443,9 @@ const Home = () => {
       console.error("播放失败:", error);
       message.error("播放失败，请稍后重试");
     }
-  }, [playSong, songs]);
+  }, [playSong]);
 
-  const handleDownload = useCallback(async (song, event) => {
+  const handleDownload = useCallback(async (song) => {
     const hash = song.FileHash;
     
     try {

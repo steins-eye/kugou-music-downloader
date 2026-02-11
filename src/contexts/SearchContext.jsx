@@ -1,16 +1,18 @@
 // src/contexts/SearchContext.jsx
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { useState, useContext, useCallback, createContext } from "react";
 import { message } from "antd";
 
+// 创建 Context
 const SearchContext = createContext();
 
 export const useSearch = () => {
   const context = useContext(SearchContext);
   if (!context) {
-    throw new Error("useSearch must be used within a SearchProvider");
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
+
 
 export const SearchProvider = ({ children }) => {
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -21,13 +23,13 @@ export const SearchProvider = ({ children }) => {
       message.warning("请输入搜索关键词");
       return;
     }
-    if (keyword !== searchKeyword) {
-      setSearchKeyword(keyword.trim());
-      setIsSearching(true);
-    }
+    setSearchKeyword(keyword.trim());
+    setIsSearching(true);
 
-    // 搜索状态由使用搜索结果的组件来控制
-  }, [searchKeyword]);
+  }, []);
+
+
+
 
   const clearSearch = useCallback(() => {
     setSearchKeyword("");
@@ -37,6 +39,8 @@ export const SearchProvider = ({ children }) => {
   const finishSearch = useCallback(() => {
     setIsSearching(false);
   }, []);
+
+
 
   const value = {
     searchKeyword,
@@ -51,3 +55,7 @@ export const SearchProvider = ({ children }) => {
     <SearchContext.Provider value={value}>{children}</SearchContext.Provider>
   );
 };
+
+// 导出 Context 供 hooks 使用
+export default SearchContext;
+
