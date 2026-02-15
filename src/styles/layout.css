@@ -1598,3 +1598,89 @@
     width: 50px;
   }
 }
+
+/* 优化的无限滚动样式 */
+.optimized-infinite-scroll {
+  position: relative;
+}
+
+.optimized-infinite-scroll .ant-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.optimized-song-list .song-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.optimized-song-list .song-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 滚动性能优化 */
+.optimized-infinite-scroll {
+  /* 启用硬件加速 */
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.optimized-infinite-scroll .ant-list-item {
+  /* 减少重绘 */
+  contain: layout style paint;
+}
+
+/* 加载指示器样式 */
+.infinite-scroll-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.infinite-scroll-end {
+  padding: 24px;
+  text-align: center;
+  color: #8c8c8c;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .optimized-infinite-scroll .ant-list-items {
+    gap: 8px;
+  }
+  
+  .infinite-scroll-loader,
+  .infinite-scroll-end {
+    padding: 16px;
+    font-size: 13px;
+  }
+}
+
+/* 滚动条美化 */
+.song-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.song-list-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.song-list-container::-webkit-scrollbar-thumb {
+  background: rgba(24, 144, 255, 0.3);
+  border-radius: 3px;
+}
+
+.song-list-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(24, 144, 255, 0.5);
+}

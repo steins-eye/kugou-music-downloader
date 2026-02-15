@@ -210,13 +210,13 @@ const SearchWithSuggestions = ({
         placeholder={placeholder}
         disabled={disabled}
         className="search-autocomplete"
-        popupClassName="search-suggestions-dropdown"
+        classNames={{ popup: { root: 'search-suggestions-dropdown' } }}
         suffix={<SearchOutlined />}
         onKeyDown={handleKeyDown}
         notFoundContent={loading ? '搜索中...' : '暂无匹配结果'}
         // 禁用自动选择第一个选项的行为
         defaultActiveFirstOption={false}
-        dropdownRender={(menu) => (
+        popupRender={(menu) => (
           <div className="suggestions-dropdown">
             {menu}
           </div>

@@ -1,7 +1,8 @@
 // src/pages/Home.jsx
-import React, { useState, useRef, useCallback, useEffect, memo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useCallback, useEffect, memo } from "react";
 import { Spin, Empty, message, Progress } from "antd";
+import OptimizedInfiniteScroll from "../components/OptimizedInfiniteScroll";
+import useInfiniteScrollOptimized from "../hooks/useInfiniteScrollOptimized";
 import {
   PlayCircleOutlined,
   DownloadOutlined,
@@ -204,7 +205,7 @@ const SongItem = memo(({ song, albumImage, onPlay, onDownload, isLast, lastRef, 
 SongItem.displayName = 'SongItem';
 
 // 独立的歌曲列表组件，使用memo优化渲染
-const SongList = memo(({ songs, albumImages, onPlay, onDownload, lastRef, downloadProgress }) => {
+const SongList = memo(({ songs, albumImages, onPlay, onDownload, downloadProgress }) => {
   if (songs.length === 0) {
     return (
       <div className="no-results">
@@ -234,8 +235,6 @@ const SongList = memo(({ songs, albumImages, onPlay, onDownload, lastRef, downlo
           albumImage={albumImages[song.FileHash]}
           onPlay={onPlay}
           onDownload={onDownload}
-          isLast={index === songs.length - 1}
-          lastRef={lastRef}
           downloadProgress={downloadProgress}
         />
       ))}
@@ -257,15 +256,19 @@ const SongList = memo(({ songs, albumImages, onPlay, onDownload, lastRef, downlo
 });
 
 const Home = () => {
-  const [songs, setSongs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLazyLoading, setIsLazyLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [pageSize] = useState(15);
-  const [hasMore, setHasMore] = useState(true);
   const [albumImages, setAlbumImages] = useState({}); // 存储专辑封面图片URL
-  const observerRef = useRef();
+  
+  // 使用优化的无限滚动Hook
+  const infiniteScroll = useInfiniteScrollOptimized(15);
+  const { 
+    data: songs, 
+    isLoading, 
+    total, 
+    hasMore, 
+    currentPage,
+    loadInitial, 
+    loadMore 
+  } = infiniteScroll;
 
   const { playSong } = usePlayerActions();
   const { searchKeyword, finishSearch } = useSearch();
@@ -274,7 +277,7 @@ const Home = () => {
   const { updateProgress, removeProgress } = useDownloadActions();
 
   // 批量获取专辑封面图片 - 优化：限制并发数和分批加载
-  const fetchAlbumImagesBatch = async (songs) => {
+  const fetchAlbumImagesBatch = useCallback(async (songs) => {
     try {
       // 限制并发数，避免一次性加载太多图片导致卡顿
       const CONCURRENT_LIMIT = 5; // 每次最多5个并发请求
@@ -351,80 +354,45 @@ const Home = () => {
     } catch (error) {
       console.error("批量获取专辑图片失败:", error);
     }
-  };
+  }, []);
 
-  const searchSongs = useCallback(
-    async (page = 1, keyword = searchKeyword) => {
-      // 如果没有关键词且不是分页操作，提示用户输入
-      if (!keyword?.trim() && page === 1) {
-        // 不再弹出alert，让用户自己输入
-        return;
+  // 包装原始搜索函数以适配Hook
+  const searchSongs = useCallback(async (page = 1, keyword = searchKeyword) => {
+    // 如果没有关键词且不是分页操作，提示用户输入
+    if (!keyword?.trim() && page === 1) {
+      return;
+    }
+
+    const searchKeywordValue = keyword?.trim() || "";
+    if (!searchKeywordValue) {
+      return;
+    }
+
+    try {
+      const res = await request(
+        `/search?type=song&keywords=${searchKeywordValue}&page=${page}&pagesize=15`
+      );
+      
+      // 获取专辑图片
+      if (res?.data?.lists) {
+        fetchAlbumImagesBatch(res.data.lists);
       }
+      
+      finishSearch();
+      return res;
+    } catch (error) {
+      console.error("搜索失败:", error);
+      message.error("搜索失败，请稍后重试");
+      throw error;
+    }
+  }, [finishSearch, searchKeyword, fetchAlbumImagesBatch]);
 
-      // 如果没有关键词但有分页操作，使用传入的关键词
-      const searchKeywordValue = keyword?.trim() || "";
-
-      if (!searchKeywordValue) {
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        const res = await request(
-          `/search?type=song&keywords=${searchKeywordValue}&page=${page}&pagesize=${pageSize}`
-        );
-        const data = res.data;
-        if (page === 1) {
-          setSongs(data.lists || []);
-          // 批量获取新搜索结果的专辑封面
-          fetchAlbumImagesBatch(data.lists || []);
-        } else {
-          const newSongs = data.lists || [];
-          setSongs((prevSongs) => [...prevSongs, ...newSongs]);
-          // 批量获取新增歌曲的专辑封面
-          fetchAlbumImagesBatch(newSongs);
-        }
-        setTotal(data.total || 0);
-        setCurrentPage(page);
-        setHasMore(page * pageSize < (data.total || 0));
-      } catch (error) {
-        console.error("搜索失败:", error);
-        message.error("搜索失败，请稍后重试");
-      } finally {
-        setIsLoading(false);
-        setIsLazyLoading(false);
-        finishSearch(); // 完成搜索后关闭加载状态
-      }
-    },
-    [finishSearch, pageSize, searchKeyword]
-  );
-
-  useEffect(()=>{
-    searchSongs()
-  },[searchSongs])
-
-  // 注意：搜索现在只通过回车键或选择建议项触发
-  // 移除了对 searchKeyword 变化的监听，避免输入时自动执行搜索
-
-  const loadMoreSongs = useCallback(() => {
-    if (!hasMore || isLoading || isLazyLoading) return;
-    setIsLazyLoading(true);
-    searchSongs(currentPage + 1, searchKeyword); // 显式传递当前搜索关键词
-  }, [hasMore, isLoading, isLazyLoading, searchSongs, currentPage, searchKeyword]);
-
-  const lastSongElementRef = useCallback(
-    (node) => {
-      if (isLoading || isLazyLoading) return;
-      if (observerRef.current) observerRef.current.disconnect();
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMoreSongs();
-        }
-      });
-      if (node) observerRef.current.observe(node);
-    },
-    [isLoading, isLazyLoading, hasMore, loadMoreSongs]
-  );
+  // 监听搜索关键词变化，触发初始加载
+  useEffect(() => {
+    if (searchKeyword?.trim()) {
+      loadInitial(searchSongs, searchKeyword);
+    }
+  }, [searchKeyword, loadInitial, searchSongs]);
 
   const handlePlaySong = useCallback(async (song) => {
     try {
@@ -478,6 +446,19 @@ const Home = () => {
     }
   }, [updateProgress, removeProgress]);
 
+  // 渲染单个歌曲项
+  const renderSongItem = useCallback((song, index) => (
+    <SongItem
+      key={`${song.FileHash}-${index}`}
+      song={song}
+      albumImage={albumImages[song.FileHash]}
+      onPlay={handlePlaySong}
+      onDownload={handleDownload}
+      downloadProgress={downloadProgress}
+      isLast={index === songs.length - 1}
+    />
+  ), [albumImages, handlePlaySong, handleDownload, downloadProgress, songs.length]);
+
   return (
     <div className="home-container">
       {/* 结果区域 */}
@@ -493,31 +474,27 @@ const Home = () => {
         </div>
 
         <div className="song-list-container">
-          <Spin spinning={isLoading} size="large" tip="搜索中...">
-            <SongList 
-              songs={songs}
-              albumImages={albumImages}
-              onPlay={handlePlaySong}
-              onDownload={handleDownload}
-              lastRef={lastSongElementRef}
-              downloadProgress={downloadProgress}
-            />
-          </Spin>
-
-          {/* 懒加载指示器 */}
-          {isLazyLoading && (
-            <div className="lazy-loading-indicator">
-              <LoadingOutlined style={{ fontSize: 24, color: "#1890ff" }} />
-              <span>加载更多歌曲...</span>
-            </div>
-          )}
-
-          {/* 没有更多数据提示 */}
-          {!hasMore && songs.length > 0 && (
-            <div className="no-more-data">
-              <span>没有更多歌曲了</span>
-            </div>
-          )}
+          <OptimizedInfiniteScroll
+            data={songs}
+            hasMore={hasMore && songs.length > 0}
+            loadMore={() => loadMore(searchSongs, searchKeyword)}
+            loading={isLoading}
+            renderItem={renderSongItem}
+            loader={
+              <div className="lazy-loading-indicator">
+                <LoadingOutlined style={{ fontSize: 24, color: "#1890ff" }} />
+                <span>加载更多歌曲...</span>
+              </div>
+            }
+            endMessage={
+              songs.length > 0 ? (
+                <div className="no-more-data">
+                  <span>没有更多歌曲了</span>
+                </div>
+              ) : null
+            }
+            className="optimized-song-list"
+          />
         </div>
       </div>
     </div>
