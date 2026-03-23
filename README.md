@@ -2,7 +2,7 @@
 
 基于 Web 的酷狗音乐 MP3 下载工具，支持搜索、试听与下载高品质 MP3（320kbps）。
 
-**在线访问**：[http://nginx.cxy0721.dpdns.org/](http://nginx.cxy0721.dpdns.org/)
+**在线访问**：[http://steinseye.top/](http://steinseye.top/)
 
 ## 功能说明
 
