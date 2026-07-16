@@ -1,5 +1,5 @@
 // src/components/SearchWithSuggestions.jsx
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { AutoComplete } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getSuggestions } from '../services/api';
@@ -9,7 +9,9 @@ const SearchWithSuggestions = ({
   onSearch, 
   disabled = false, 
   placeholder = "搜索歌曲、歌手、专辑...",
-  initialValue = ""
+  initialValue = "",
+  autoFocus = false,
+  getPopupContainer
 }) => {
   
   const [localValue, setLocalValue] = useState(initialValue);
@@ -18,6 +20,19 @@ const SearchWithSuggestions = ({
   const [isSelecting, setIsSelecting] = useState(false); // 新增：标记是否正在选择建议项
   const autoCompleteRef = useRef(null);
   const debounceTimer = useRef(null);
+
+  // 自动聚焦
+  useEffect(() => {
+    if (autoFocus && autoCompleteRef.current) {
+      // 延迟聚焦确保 DOM 已渲染
+      const timer = setTimeout(() => {
+        if (autoCompleteRef.current) {
+          autoCompleteRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocus]);
 
   // 获取搜索建议
   const fetchSuggestions = useCallback(async (keyword) => {
@@ -211,6 +226,7 @@ const SearchWithSuggestions = ({
         disabled={disabled}
         className="search-autocomplete"
         classNames={{ popup: { root: 'search-suggestions-dropdown' } }}
+        getPopupContainer={getPopupContainer}
         suffix={<SearchOutlined />}
         onKeyDown={handleKeyDown}
         notFoundContent={loading ? '搜索中...' : '暂无匹配结果'}

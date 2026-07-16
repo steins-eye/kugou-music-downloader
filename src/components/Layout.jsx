@@ -1,6 +1,7 @@
 // src/components/Layout.jsx
-import React from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { SearchOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useSearch } from '../contexts/SearchContext';
 import SearchWithSuggestions from './SearchWithSuggestions';
@@ -10,16 +11,39 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const { handleSearch: contextHandleSearch } = useSearch();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const mobileSearchRef = useRef(null);
+
+  // 监听 Escape 键关闭全屏搜索
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileSearchOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [mobileSearchOpen]);
 
   const handleLogout = () => {
     window.location.href = '/';
     logout();
   };
 
-  const handleSearchSubmit = (keyword) => {
+  const handleSearchSubmit = useCallback((keyword) => {
     if (keyword?.trim()) {
       contextHandleSearch(keyword.trim());
+      setMobileSearchOpen(false);
     }
+  }, [contextHandleSearch]);
+
+  const openMobileSearch = () => {
+    setMobileSearchOpen(true);
+  };
+
+  const closeMobileSearch = () => {
+    setMobileSearchOpen(false);
   };
 
   return (
@@ -42,13 +66,24 @@ const Layout = ({ children }) => {
               <Link to="/">🎵 音乐下载器</Link>
             </div>
             {location.pathname === '/' && (
-              <div className="header-search-container">
-                <SearchWithSuggestions 
-                  onSearch={handleSearchSubmit}
-                  disabled={false}
-                  placeholder="搜索歌曲、歌手、专辑..."
-                />
-              </div>
+              <>
+                {/* 桌面端搜索框 */}
+                <div className="header-search-container desktop-search">
+                  <SearchWithSuggestions 
+                    onSearch={handleSearchSubmit}
+                    disabled={false}
+                    placeholder="搜索歌曲、歌手、专辑..."
+                  />
+                </div>
+                {/* 移动端搜索图标按钮 */}
+                <button 
+                  className="mobile-search-trigger" 
+                  onClick={openMobileSearch}
+                  aria-label="搜索"
+                >
+                  <SearchOutlined />
+                </button>
+              </>
             )}
           </div>
           <nav className="nav">
@@ -90,6 +125,34 @@ const Layout = ({ children }) => {
           <p>© 2026 音乐下载器 - 享受高品质音乐体验</p>
         </footer>
       </div>
+      
+      {/* 移动端全屏搜索覆盖层 */}
+      {mobileSearchOpen && (
+        <div className="mobile-search-overlay" ref={mobileSearchRef}>
+          <div className="mobile-search-header">
+            <button 
+              className="mobile-search-back-btn" 
+              onClick={closeMobileSearch}
+              aria-label="返回"
+            >
+              <ArrowLeftOutlined />
+            </button>
+            <div className="mobile-search-input-wrapper">
+              <SearchWithSuggestions 
+                onSearch={handleSearchSubmit}
+                disabled={false}
+                placeholder="搜索歌曲、歌手、专辑..."
+                autoFocus={true}
+                getPopupContainer={() => mobileSearchRef.current || document.body}
+              />
+            </div>
+          </div>
+          <div 
+            className="mobile-search-backdrop" 
+            onClick={closeMobileSearch}
+          />
+        </div>
+      )}
       
       {/* 底部播放器 */}
       <BottomPlayer />
